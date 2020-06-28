@@ -8,29 +8,66 @@ import 'package:project/screens/home/settings_form.dart';
 
 import '../../models/my_library.dart';
 import '../../models/user.dart';
+import '../../services/auth.dart';
+import '../../services/auth.dart';
 import '../../services/database.dart';
 import 'library_tile.dart';
 
 class Home extends StatelessWidget {
   final AuthService _auth = AuthService();
+  final GlobalKey _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  Widget drawer(BuildContext context) {
+    return Column(
+      children: <Widget>[
+        UserAccountsDrawerHeader(
+          //Account Name cannot be displayed since Name is not an input during registration
+          accountName: null,
+          accountEmail: FutureBuilder(
+            future: AuthService().getUserEmail(),
+            builder: (context, snapshot) {
+              if (snapshot.hasData) {
+                return Text(snapshot.data);
+              } else if (snapshot.hasError) {
+                return Text(snapshot.error);
+              }
+              return CircularProgressIndicator();
+            },
+          ),
+          currentAccountPicture: Icon(
+            Icons.account_circle,
+            size: 100,
+          ),
+        ),
+        FlatButton.icon(
+            onPressed: () => AuthService().signOut(),
+            icon: Icon(Icons.account_box),
+            label: Text("Sign Out"))
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    void _showSettingsPanel() {
-      showModalBottomSheet(
-          context: context,
-          builder: (context) {
-            return Container(
-              padding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 60.0),
-              child: SettingsForm(),
-            );
-          });
-    }
-
     return Scaffold(
+      key: _scaffoldKey,
       // floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () => showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            builder: (context) {
+              return Container(
+                padding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 60.0),
+                child: SettingsForm(
+                  toAdd: true,
+                ),
+              );
+            }),
         child: Icon(Icons.add),
+      ),
+      drawer: Drawer(
+        child: drawer(context),
       ),
       body: SafeArea(
         child: Column(
@@ -38,12 +75,23 @@ class Home extends StatelessWidget {
             SizedBox(
               height: 20,
             ),
-            Text(
-              "Library",
-              style: TextStyle(
-                fontSize: 30,
-                fontWeight: FontWeight.bold,
-              ),
+            Stack(
+              children: [
+                Builder(
+                    builder: (context) => IconButton(
+                          icon: Icon(Icons.menu),
+                          onPressed: () => Scaffold.of(context).openDrawer(),
+                        )),
+                Center(
+                  child: Text(
+                    "Library",
+                    style: TextStyle(
+                      fontSize: 35,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
             ),
             SizedBox(
               height: 10,
@@ -54,17 +102,21 @@ class Home extends StatelessWidget {
                       .booksOfCurrentUser,
                   builder: (context, snapshot) {
                     if (snapshot.hasData) {
-                      String studentName = snapshot.data["studentname"];
-                      String bookName = snapshot.data["bookname"];
-                      int days = snapshot.data["days"];
+                      // String studentName = snapshot.data["studentname"];
+                      // String bookName = snapshot.data["bookname"];
+                      // int days = snapshot.data["days"];
+
+                      List bookList = snapshot.data["Books"];
+
                       return ListView.builder(
-                          itemCount: 1,
+                          itemCount: bookList == null ? 0 : bookList.length,
                           itemBuilder: (context, index) {
+                            var book = bookList[index];
                             return LibraryTile(
                               myLibrary: MyLibrary(
-                                  studentname: studentName,
-                                  bookname: bookName,
-                                  days: days),
+                                  studentname: book["studentname"],
+                                  bookname: book["bookname"],
+                                  days: book["days"]),
                             );
                           });
                     }

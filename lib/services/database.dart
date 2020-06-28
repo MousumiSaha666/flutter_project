@@ -2,6 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:project/models/my_library.dart';
 import 'package:project/models/user.dart';
 
+import '../models/my_library.dart';
+import '../models/my_library.dart';
+
 class DatabaseService {
   final String uid;
   DatabaseService({this.uid});
@@ -38,10 +41,6 @@ class DatabaseService {
     return libraryCollection.snapshots().map(_libraryListFromSnapshot);
   }
 
-  Stream get booksOfCurrentUser {
-    return libraryCollection.document(uid).snapshots();
-  }
-
   Future get userDataAsFuture {
     return libraryCollection.document(uid).get();
   }
@@ -55,17 +54,52 @@ class DatabaseService {
 
   ///----------------------------------------------------------------------------------------------------------------------
 
-  Future<List> getAllBooks() async {
-    return await libraryCollection
-        .document(uid)
-        .get()
-        .then((doc) => doc["Books"]);
+  Stream get booksOfCurrentUser {
+    return libraryCollection.document(uid).snapshots();
   }
 
-  Future addBook({String studentName, String bookName, int days}) async {
+  Future<List> getAllBooks() async {
+    try {
+      return await libraryCollection
+          .document(uid)
+          .get()
+          .then((doc) => doc["Books"]);
+    } catch (e) {
+      print(e.toString());
+      return [];
+    }
+  }
+
+  Future addBook(
+      {String studentName,
+      String bookName,
+      int days,
+      MyLibrary myLibrary}) async {
     List bookList = await getAllBooks();
+    if (bookList == null) bookList = [];
     bookList
         .add({"studentname": studentName, "bookname": bookName, "days": days});
+    return await libraryCollection
+        .document(uid)
+        .updateData({"Books": bookList});
+  }
+
+  Future removeBook(
+      {String studentName,
+      String bookName,
+      int days,
+      MyLibrary myLibrary}) async {
+    if (myLibrary != null) {
+      studentName = myLibrary.studentname;
+      bookName = myLibrary.bookname;
+      days = myLibrary.days;
+    }
+    List bookList = await getAllBooks();
+    if (bookList == null) return;
+    bookList.removeWhere((element) =>
+        element["studentname"] == studentName &&
+        element["bookname"] == bookName &&
+        element["days"] == days);
     return await libraryCollection
         .document(uid)
         .updateData({"Books": bookList});
