@@ -106,7 +106,12 @@ class Home extends StatelessWidget {
                       // String bookName = snapshot.data["bookname"];
                       // int days = snapshot.data["days"];
 
-                      List bookList = snapshot.data["Books"];
+                      List bookList;
+                      try {
+                        bookList = snapshot.data["Books"];
+                      } catch (e) {
+                        bookList = [];
+                      }
 
                       return ListView.builder(
                           itemCount: bookList == null ? 0 : bookList.length,

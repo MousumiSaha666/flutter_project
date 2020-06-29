@@ -43,7 +43,10 @@ class AuthService {
       FirebaseUser user = result.user;
 
       await DatabaseService(uid: user.uid)
-          .updateUserData('studname', 'bookname', 0);
+          .libraryCollection
+          .document(user.uid)
+          .setData({"Books": []});
+
       return _userFromFirebaseUser(user);
     } catch (e) {
       print(e.toString());

@@ -76,12 +76,17 @@ class _RegisterState extends State<Register> {
                             setState(() => loading = true);
                             dynamic result = await _auth
                                 .registerWithEmailAndPassword(email, password);
-                            if (result == null) {
+                            if (mounted)
                               setState(() {
-                                error = 'Give valod mail id';
                                 loading = false;
+                                Navigator.pop(context);
                               });
-                            }
+                            // if (result == null) {
+                            //   setState(() {
+                            //     error = 'Give valod mail id';
+                            //     loading = false;
+                            //   });
+
                           }
                         }),
                     SizedBox(height: 12.0),

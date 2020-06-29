@@ -13,7 +13,7 @@ class DatabaseService {
       Firestore.instance.collection('booklibrary');
 
   Future updateUserData(String studentname, String bookname, int days) async {
-    return await libraryCollection.document(uid).setData({
+    return await libraryCollection.document(uid).updateData({
       'studentname': studentname,
       'bookname': bookname,
       'days': days,
@@ -79,9 +79,7 @@ class DatabaseService {
     if (bookList == null) bookList = [];
     bookList
         .add({"studentname": studentName, "bookname": bookName, "days": days});
-    return await libraryCollection
-        .document(uid)
-        .updateData({"Books": bookList});
+    return await libraryCollection.document(uid).setData({"Books": bookList});
   }
 
   Future removeBook(
